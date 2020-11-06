@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage>
     _bloc.add(LoadHomeEvent());
 
     _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 700));
+        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
   }
 
   @override
@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage>
       builder: (context, _) {
         return Scaffold(
           key: _scaffoldKey,
-          floatingActionButton: showFab ? _newQuoteFab(context) : Container(),
+          floatingActionButton: showFab ? _addQuoteFab(context) : Container(),
           appBar: AppBar(
             title: Text("Netguru Core Values"),
           ),
@@ -112,12 +112,12 @@ class _HomePageState extends State<HomePage>
     });
   }
 
-  _newQuoteFab(BuildContext context) {
+  _addQuoteFab(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
         showFloatingActionButton(false);
         var bottomSheetController = _scaffoldKey.currentState
-            .showBottomSheet((context) => _newQuoteModal(context));
+            .showBottomSheet((context) => _addQuoteBottomSheet(context));
         bottomSheetController.closed
             .then((value) => {showFloatingActionButton(true)});
       },
@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _newQuoteModal(BuildContext context) {
+  Widget _addQuoteBottomSheet(BuildContext context) {
     return Container(
       color: Theme.of(context).backgroundColor,
       height: 100,
