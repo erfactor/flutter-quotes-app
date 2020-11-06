@@ -127,6 +127,10 @@ class _HomePageState extends State<HomePage>
               trailing: IconButton(
                   icon: Icon(Icons.favorite_outlined), onPressed: () {
                     _bloc.add(DeleteFavoriteEvent(quote.id));
+                    _scaffoldKey.currentState.showSnackBar(SnackBar(
+                      content: Text("Quote deleted from favorites!"),
+                      duration: Duration(seconds: 1),
+                    ));
               },),
             ),
           );

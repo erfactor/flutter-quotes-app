@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class QuoteService {
   static final QuoteService _instance = QuoteService._internal();
   Random _random = new Random();
-  final Duration _waitDuration = Duration(seconds: 4);
+  final Duration _waitDuration = Duration(seconds: 5);
   final String _quoteListKey = "UniqueQuoteListKey";
 
   List<Quote> _initialQuotes = [
