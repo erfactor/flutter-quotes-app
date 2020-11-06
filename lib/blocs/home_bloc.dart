@@ -9,9 +9,10 @@ abstract class HomeState {}
 class HomeLoadingState extends HomeState {}
 
 class QuoteLoadedState extends HomeState {
-  final String quote;
+  final String oldQuote;
+  final String newQuote;
 
-  QuoteLoadedState(this.quote);
+  QuoteLoadedState(this.oldQuote, this.newQuote);
 }
 
 class LoadHomeEvent extends HomeEvent {}
@@ -22,18 +23,31 @@ class QuoteLoadedEvent extends HomeEvent {
   QuoteLoadedEvent(this.quote);
 }
 
+class NewQuoteEvent extends HomeEvent {
+  final String quote;
+
+  NewQuoteEvent(this.quote);
+}
+
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  HomeBloc() : super(HomeLoadingState());
+  QuoteService _quoteService;
+
+  HomeBloc() : super(HomeLoadingState()){
+    _quoteService = QuoteService.get();
+  }
 
   @override
   Stream<HomeState> mapEventToState(HomeEvent event) async* {
     if (event is LoadHomeEvent) {
       yield HomeLoadingState();
-      QuoteService.get().getQuotes().listen((quote) {
+      _quoteService.getQuotes().listen((quote) {
         add(QuoteLoadedEvent(quote));
       });
     } else if (event is QuoteLoadedEvent) {
-      yield QuoteLoadedState(event.quote);
+      var oldQuote = state is QuoteLoadedState ? (state as QuoteLoadedState).newQuote : "";
+      yield QuoteLoadedState(oldQuote, event.quote);
+    } else if (event is NewQuoteEvent) {
+      await _quoteService.addNewQuote(event.quote);
     }
   }
 }
