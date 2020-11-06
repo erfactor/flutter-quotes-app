@@ -15,10 +15,10 @@ class QuoteService {
   Quote(1, "Exceed clients' and colleagues' expectations"),
   Quote(2, "Take ownership and question the status quo in a constructive manner"),
   Quote(3, "Be brave, curious and experiment. Learn from all successes and failures"),
-  // Quote(4, "Act in a way that makes all of us proud"),
-  // Quote(5, "Build an inclusive, transparent and socially responsible culture"),
-  // Quote(6, "Be ambitious, grow yourself and the people around you"),
-  // Quote(7, "Recognize excellence and engagement"),
+  Quote(4, "Act in a way that makes all of us proud"),
+  Quote(5, "Build an inclusive, transparent and socially responsible culture"),
+  Quote(6, "Be ambitious, grow yourself and the people around you"),
+  Quote(7, "Recognize excellence and engagement"),
   ];
 
   QuoteService._internal();
@@ -39,8 +39,7 @@ class QuoteService {
       var availableIndices = quotes.map((q) => q.id).where((qId) => !lastUsedQuoteIndices.contains(qId)).toList();
       var randomQuoteIndex = availableIndices[_random.nextInt(availableIndices.length)];
       var newQuote = quotes.firstWhere((element) => element.id == randomQuoteIndex);
-      if(lastUsedQuoteIndices.length > 0){
-        // TODO change to higher number
+      if(lastUsedQuoteIndices.length > 4){
         lastUsedQuoteIndices.removeFirst();
       }
       lastUsedQuoteIndices.addLast(newQuote.id);
