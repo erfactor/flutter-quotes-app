@@ -49,6 +49,11 @@ class QuoteService {
     }
   }
 
+  Future<List<Quote>> getFavouriteQuotes() async {
+    var quotes = await _loadQuotes();
+    return quotes.where((element) => element.isFavorite).toList();
+  }
+
   Future<void> addNewQuote(String content) async {
     var quotes = await _loadQuotes();
     int maxQuoteId = -1;

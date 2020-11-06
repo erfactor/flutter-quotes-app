@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage>
   AnimationController _controller;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _searchTextController = TextEditingController();
-  bool showFab = true;
+  bool _showFab = true;
 
   @override
   void initState() {
@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage>
         builder: (context, state) {
           if (state is HomeLoadingState) {
             return Center(child: CircularProgressIndicator());
-          } else if (state is QuoteLoadedState) {
+          } else if (state is QuotesLoadedState) {
             return _buildLayout(state);
           } else {
             throw (UnknownStateException("Unknown state from home bloc."));
@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage>
         });
   }
 
-  Widget _buildLayout(QuoteLoadedState state) {
+  Widget _buildLayout(QuotesLoadedState state) {
     if (state.animateText) {
       _controller.reset();
       _controller.forward();
@@ -57,58 +57,85 @@ class _HomePageState extends State<HomePage>
       builder: (context, _) {
         return Scaffold(
           key: _scaffoldKey,
-          floatingActionButton: showFab ? _addQuoteFab(context) : Container(),
+          floatingActionButton: _showFab && state.currentIndex == 0
+              ? _addQuoteFab(context)
+              : Container(),
+          bottomNavigationBar: _bottomNavigationBar(context, state),
           appBar: AppBar(
             title: Text("Netguru Core Values"),
           ),
-          body: Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  height: 80,
-                ),
-                _favoriteButton(state),
-                Container(
-                  height: 80,
-                ),
-                FractionallySizedBox(
-                    widthFactor: 0.8,
-                    child: Stack(
-                      children: [
-                        _fadingText(context, state.oldQuoteContent, [
-                          0,
-                          _controller.value,
-                          0.5 + _controller.value * 2
-                        ], [
-                          Colors.transparent,
-                          Colors.transparent,
-                          textColor
-                        ]),
-                        _fadingText(context, state.quote.content, [
-                          0,
-                          _controller.value,
-                          _controller.value,
-                          1
-                        ], [
-                          textColor,
-                          textColor,
-                          Colors.transparent,
-                          Colors.transparent
-                        ]),
-                      ],
-                    )),
-              ],
-            ),
-          ),
+          body: state.currentIndex == 0
+              ? _quotesView(state, context, textColor)
+              : _favoritesView(state, context),
         );
       },
     );
   }
 
+  BottomNavigationBar _bottomNavigationBar(
+      BuildContext context, QuotesLoadedState state) {
+    return BottomNavigationBar(
+      backgroundColor: Theme.of(context).bottomAppBarColor,
+      currentIndex: state.currentIndex,
+      items: [
+        BottomNavigationBarItem(
+            icon: Icon(Icons.format_quote_rounded), label: "Values"),
+        BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
+      ],
+      onTap: (index) {
+        if (index == 0) {
+          _bloc.add(LoadQuotesEvent());
+        } else {
+          _bloc.add(LoadFavoritesEvent());
+        }
+      },
+    );
+  }
+
+  Widget _quotesView(
+      QuotesLoadedState state, BuildContext context, Color textColor) {
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Container(
+            height: 80,
+          ),
+          _favoriteButton(state),
+          Container(
+            height: 80,
+          ),
+          FractionallySizedBox(
+              widthFactor: 0.8,
+              child: _textAnimation(context, state, textColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _favoritesView(QuotesLoadedState state, BuildContext context) {
+    var quotes = state.favouriteQuotes;
+    return ListView.builder(
+        itemCount: quotes.length,
+        itemBuilder: (BuildContext context, int index) {
+          var quote = quotes[index];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListTile(
+              tileColor: Theme.of(context).bottomAppBarColor,
+              title: Text( quote.content),
+              trailing: IconButton(
+                  icon: Icon(Icons.favorite_outlined), onPressed: () {
+                    _bloc.add(DeleteFavoriteEvent(quote.id));
+              },),
+            ),
+          );
+        });
+  }
+
   void showFloatingActionButton(bool value) {
     setState(() {
-      showFab = value;
+      _showFab = value;
     });
   }
 
@@ -141,8 +168,8 @@ class _HomePageState extends State<HomePage>
               onPressed: () {
                 _bloc.add(NewQuoteEvent(_searchTextController.value.text));
                 Navigator.pop(context);
-                Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text("New quote was added!"),
+                _scaffoldKey.currentState.showSnackBar(SnackBar(
+                  content: Text("New quote added!"),
                   duration: Duration(seconds: 1),
                 ));
               },
@@ -153,15 +180,39 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _favoriteButton(QuoteLoadedState state) {
+  Widget _favoriteButton(QuotesLoadedState state) {
     return IconButton(
       iconSize: 60,
       icon: Icon(
         state.quote.isFavorite ? Icons.favorite : Icons.favorite_border,
       ),
       onPressed: () {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(state.quote.isFavorite
+              ? "Quote deleted from favorites!"
+              : "Quote added to favorites!"),
+          duration: Duration(seconds: 1),
+        ));
         _bloc.add(FavoriteEvent());
       },
+    );
+  }
+
+  Stack _textAnimation(
+      BuildContext context, QuotesLoadedState state, Color textColor) {
+    return Stack(
+      children: [
+        _fadingText(
+            context,
+            state.oldQuoteContent,
+            [0, _controller.value, 0.5 + _controller.value * 2],
+            [Colors.transparent, Colors.transparent, textColor]),
+        _fadingText(
+            context,
+            state.quote.content,
+            [0, _controller.value, _controller.value, 1],
+            [textColor, textColor, Colors.transparent, Colors.transparent]),
+      ],
     );
   }
 
