@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:netguru/blocs/home_bloc.dart';
@@ -16,6 +15,9 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   HomeBloc _bloc;
   AnimationController _controller;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _searchTextController = TextEditingController();
+  bool showFab = true;
 
   @override
   void initState() {
@@ -43,43 +45,38 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildLayout(QuoteLoadedState state) {
-    _controller.reset();
-    _controller.forward();
+    if (state.animateText) {
+      _controller.reset();
+      _controller.forward();
+      state.animateText = false;
+    }
     var textColor = Theme.of(context).textTheme.headline4.color;
 
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
         return Scaffold(
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              // TODO Add new quote modal with snackbar on save
-              _bloc.add(NewQuoteEvent("super quotation just added"));
-            },
-            child: Icon(Icons.add),
-          ),
+          key: _scaffoldKey,
+          floatingActionButton: showFab ? _newQuoteFab(context) : Container(),
           appBar: AppBar(
             title: Text("Netguru Core Values"),
           ),
           body: Center(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                Container(height: 80,),
-                IconButton(
-                  icon: Icon(
-                    Icons.favorite_border,
-                    size: 60,
-                  ),
-                  onPressed: () {
-                    // TODO add favorite
-                  },
+                Container(
+                  height: 80,
                 ),
-                Container(height: 80,),
+                _favoriteButton(state),
+                Container(
+                  height: 80,
+                ),
                 FractionallySizedBox(
                     widthFactor: 0.8,
                     child: Stack(
                       children: [
-                        _fadingText(context, state.oldQuote, [
+                        _fadingText(context, state.oldQuoteContent, [
                           0,
                           _controller.value,
                           0.5 + _controller.value * 2
@@ -88,7 +85,7 @@ class _HomePageState extends State<HomePage>
                           Colors.transparent,
                           textColor
                         ]),
-                        _fadingText(context, state.newQuote, [
+                        _fadingText(context, state.quote.content, [
                           0,
                           _controller.value,
                           _controller.value,
@@ -105,6 +102,65 @@ class _HomePageState extends State<HomePage>
             ),
           ),
         );
+      },
+    );
+  }
+
+  void showFloatingActionButton(bool value) {
+    setState(() {
+      showFab = value;
+    });
+  }
+
+  _newQuoteFab(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () {
+        showFloatingActionButton(false);
+        var bottomSheetController = _scaffoldKey.currentState
+            .showBottomSheet((context) => _newQuoteModal(context));
+        bottomSheetController.closed
+            .then((value) => {showFloatingActionButton(true)});
+      },
+      child: Icon(Icons.add),
+    );
+  }
+
+  Widget _newQuoteModal(BuildContext context) {
+    return Container(
+      color: Theme.of(context).backgroundColor,
+      height: 100,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextField(
+              controller: _searchTextController,
+            ),
+            ElevatedButton(
+              child: const Text('Add new quote'),
+              onPressed: () {
+                _bloc.add(NewQuoteEvent(_searchTextController.value.text));
+                Navigator.pop(context);
+                Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text("New quote was added!"),
+                  duration: Duration(seconds: 1),
+                ));
+              },
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _favoriteButton(QuoteLoadedState state) {
+    return IconButton(
+      iconSize: 60,
+      icon: Icon(
+        state.quote.isFavorite ? Icons.favorite : Icons.favorite_border,
+      ),
+      onPressed: () {
+        _bloc.add(FavoriteEvent());
       },
     );
   }

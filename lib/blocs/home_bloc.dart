@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:netguru/models/quote.dart';
 import 'package:netguru/services/quote_service.dart';
 
 abstract class HomeEvent {}
@@ -9,24 +10,27 @@ abstract class HomeState {}
 class HomeLoadingState extends HomeState {}
 
 class QuoteLoadedState extends HomeState {
-  final String oldQuote;
-  final String newQuote;
+  final String oldQuoteContent;
+  final Quote quote;
+  bool animateText;
 
-  QuoteLoadedState(this.oldQuote, this.newQuote);
+  QuoteLoadedState(this.oldQuoteContent, this.quote, {this.animateText = false});
 }
 
 class LoadHomeEvent extends HomeEvent {}
 
 class QuoteLoadedEvent extends HomeEvent {
-  final String quote;
+  final Quote quote;
 
   QuoteLoadedEvent(this.quote);
 }
 
-class NewQuoteEvent extends HomeEvent {
-  final String quote;
+class FavoriteEvent extends HomeEvent {}
 
-  NewQuoteEvent(this.quote);
+class NewQuoteEvent extends HomeEvent {
+  final String quoteContent;
+
+  NewQuoteEvent(this.quoteContent);
 }
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
@@ -44,10 +48,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         add(QuoteLoadedEvent(quote));
       });
     } else if (event is QuoteLoadedEvent) {
-      var oldQuote = state is QuoteLoadedState ? (state as QuoteLoadedState).newQuote : "";
-      yield QuoteLoadedState(oldQuote, event.quote);
+      var oldQuoteContent = state is QuoteLoadedState ? (state as QuoteLoadedState).quote.content : "";
+      yield QuoteLoadedState(oldQuoteContent, event.quote, animateText: true);
     } else if (event is NewQuoteEvent) {
-      await _quoteService.addNewQuote(event.quote);
+      await _quoteService.addNewQuote(event.quoteContent);
+    } else if (event is FavoriteEvent) {
+      var currentState = state as QuoteLoadedState;
+      var quote = Quote(currentState.quote.id, currentState.quote.content, isFavorite: !currentState.quote.isFavorite);
+      await _quoteService.setQuoteAsFavorite(quote.id, quote.isFavorite);
+      yield QuoteLoadedState(currentState.oldQuoteContent, quote);
     }
   }
 }
