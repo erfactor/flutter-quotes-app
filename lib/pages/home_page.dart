@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage>
         cubit: _bloc,
         builder: (context, state) {
           if (state is HomeLoadingState) {
-            return Center(child: CircularProgressIndicator());
+            return Container(color: Colors.grey,);
           } else if (state is QuotesLoadedState) {
             return _buildLayout(state);
           } else {
