@@ -244,7 +244,7 @@ class _HomePageState extends State<HomePage>
   }
 
   void _showSnack(BuildContext context, String text) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    _scaffoldKey.currentState.showSnackBar(SnackBar(
       content: Text(text),
       duration: Duration(milliseconds: 800),
     ));
