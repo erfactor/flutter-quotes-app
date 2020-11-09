@@ -96,16 +96,17 @@ class _HomePageState extends State<HomePage>
 
   Widget _quoteView(
       HomeLoadedState state, BuildContext context, Color textColor) {
+    var gapHeight = MediaQuery.of(context).size.height * 0.05;
     return Center(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Container(
-            height: 80,
+            height: gapHeight,
           ),
           _favoriteButton(state, context),
           Container(
-            height: 80,
+            height: gapHeight,
           ),
           FractionallySizedBox(
               widthFactor: 0.8,

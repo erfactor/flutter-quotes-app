@@ -23,7 +23,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  splashscreen:
   flutter_bloc:
   json_annotation:
   shared_preferences:
