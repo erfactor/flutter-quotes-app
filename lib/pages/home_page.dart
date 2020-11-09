@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage>
         builder: (context, state) {
           if (state is HomeLoadingState) {
             return Container(color: Colors.grey,);
-          } else if (state is QuotesLoadedState) {
+          } else if (state is HomeLoadedState) {
             return _buildLayout(state);
           } else {
             throw (UnknownStateException("Unknown state from home bloc."));
@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage>
         });
   }
 
-  Widget _buildLayout(QuotesLoadedState state) {
+  Widget _buildLayout(HomeLoadedState state) {
     if (state.animateText) {
       _controller.reset();
       _controller.forward();
@@ -58,14 +58,14 @@ class _HomePageState extends State<HomePage>
       builder: (context, _) {
         return Scaffold(
           key: _scaffoldKey,
-          floatingActionButton: _showFab && state.currentIndex == 0
+          floatingActionButton: _showFab && state.bottomBarIndex == 0
               ? _addQuoteFab(context)
               : Container(),
           bottomNavigationBar: _bottomNavigationBar(context, state),
           appBar: AppBar(
             title: Text("Netguru Core Values"),
           ),
-          body: state.currentIndex == 0
+          body: state.bottomBarIndex == 0
               ? _quoteView(state, context, textColor)
               : _favoritesView(state, context),
         );
@@ -74,10 +74,10 @@ class _HomePageState extends State<HomePage>
   }
 
   BottomNavigationBar _bottomNavigationBar(
-      BuildContext context, QuotesLoadedState state) {
+      BuildContext context, HomeLoadedState state) {
     return BottomNavigationBar(
       backgroundColor: Theme.of(context).bottomAppBarColor,
-      currentIndex: state.currentIndex,
+      currentIndex: state.bottomBarIndex,
       items: [
         BottomNavigationBarItem(
             icon: Icon(Icons.format_quote_rounded), label: "Values"),
@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _quoteView(
-      QuotesLoadedState state, BuildContext context, Color textColor) {
+      HomeLoadedState state, BuildContext context, Color textColor) {
     return Center(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _favoritesView(QuotesLoadedState state, BuildContext context) {
+  Widget _favoritesView(HomeLoadedState state, BuildContext context) {
     var quotes = state.favouriteQuotes;
     return ListView.builder(
         itemCount: quotes.length,
@@ -186,7 +186,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget _favoriteButton(QuotesLoadedState state, BuildContext context) {
+  Widget _favoriteButton(HomeLoadedState state, BuildContext context) {
     return IconButton(
       iconSize: 60,
       icon: Icon(
@@ -202,7 +202,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Stack _textAnimation(
-      BuildContext context, QuotesLoadedState state, Color textColor) {
+      BuildContext context, HomeLoadedState state, Color textColor) {
     return Stack(
       children: [
         _fadingText(

@@ -9,15 +9,15 @@ abstract class HomeState {}
 
 class HomeLoadingState extends HomeState {}
 
-class QuotesLoadedState extends HomeState {
+class HomeLoadedState extends HomeState {
   final String oldQuoteContent;
   final Quote quote;
   final List<Quote> favouriteQuotes;
-  int currentIndex;
+  int bottomBarIndex;
   bool animateText;
 
-  QuotesLoadedState(
-      this.oldQuoteContent, this.quote, this.favouriteQuotes, this.currentIndex,
+  HomeLoadedState(
+      this.oldQuoteContent, this.quote, this.favouriteQuotes, this.bottomBarIndex,
       {this.animateText = false});
 }
 
@@ -63,41 +63,41 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       });
     } else if (event is QuoteLoadedEvent) {
       var oldQuoteContent = "";
-      var currentIndex = 0;
+      var bottomBarIndex = 0;
       var favoriteQuotes;
-      if (state is QuotesLoadedState) {
-        var currentState = state as QuotesLoadedState;
+      if (state is HomeLoadedState) {
+        var currentState = state as HomeLoadedState;
         oldQuoteContent = currentState.quote.content;
-        currentIndex = currentState.currentIndex;
+        bottomBarIndex = currentState.bottomBarIndex;
         favoriteQuotes = currentState.favouriteQuotes;
       }
-      yield QuotesLoadedState(
-          oldQuoteContent, event.quote, favoriteQuotes, currentIndex,
+      yield HomeLoadedState(
+          oldQuoteContent, event.quote, favoriteQuotes, bottomBarIndex,
           animateText: true);
     } else if (event is NewQuoteEvent) {
       await _quoteService.addNewQuote(event.quoteContent);
     } else if (event is FavoriteEvent) {
-      var currentState = state as QuotesLoadedState;
+      var currentState = state as HomeLoadedState;
       var quote = Quote(currentState.quote.id, currentState.quote.content,
           isFavorite: !currentState.quote.isFavorite);
       await _quoteService.setQuoteAsFavorite(quote.id, quote.isFavorite);
-      yield QuotesLoadedState(currentState.oldQuoteContent, quote,
-          currentState.favouriteQuotes, currentState.currentIndex);
+      yield HomeLoadedState(currentState.oldQuoteContent, quote,
+          currentState.favouriteQuotes, currentState.bottomBarIndex);
     } else if (event is DeleteFavoriteEvent) {
-      var currentState = state as QuotesLoadedState;
+      var currentState = state as HomeLoadedState;
       if (currentState.quote.id == event.id) {
         currentState.quote.isFavorite = false;
       }
       await _quoteService.setQuoteAsFavorite(event.id, false);
       add(LoadFavoritesEvent());
     } else if (event is LoadFavoritesEvent) {
-      var currentState = state as QuotesLoadedState;
+      var currentState = state as HomeLoadedState;
       var favouriteQuotes = await _quoteService.getFavouriteQuotes();
-      yield QuotesLoadedState(
+      yield HomeLoadedState(
           currentState.oldQuoteContent, currentState.quote, favouriteQuotes, 1);
     } else if (event is LoadQuotesEvent) {
-      var currentState = state as QuotesLoadedState;
-      yield QuotesLoadedState(currentState.oldQuoteContent, currentState.quote,
+      var currentState = state as HomeLoadedState;
+      yield HomeLoadedState(currentState.oldQuoteContent, currentState.quote,
           currentState.favouriteQuotes, 0);
     }
   }
