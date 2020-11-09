@@ -150,6 +150,7 @@ class _HomePageState extends State<HomePage>
   _addQuoteFab(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
+        _searchTextController.clear();
         showFloatingActionButton(false);
         _bottomSheetController = _scaffoldKey.currentState
             .showBottomSheet((context) => _addQuoteBottomSheet(context));
@@ -207,7 +208,7 @@ class _HomePageState extends State<HomePage>
         _fadingText(
             context,
             state.oldQuoteContent,
-            [0, _controller.value, 0.5 + _controller.value * 2],
+            [0, _controller.value, _controller.value],
             [Colors.transparent, Colors.transparent, textColor]),
         _fadingText(
             context,
