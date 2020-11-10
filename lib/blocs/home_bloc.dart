@@ -39,7 +39,7 @@ class FavoriteEvent extends HomeEvent {}
 
 class LoadFavoritesEvent extends HomeEvent {}
 
-class LoadQuotesEvent extends HomeEvent {}
+class LoadQuoteEvent extends HomeEvent {}
 
 class NewQuoteEvent extends HomeEvent {
   final String quoteContent;
@@ -95,7 +95,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       var favouriteQuotes = await _quoteService.getFavouriteQuotes();
       yield HomeLoadedState(
           currentState.oldQuoteContent, currentState.quote, favouriteQuotes, 1);
-    } else if (event is LoadQuotesEvent) {
+    } else if (event is LoadQuoteEvent) {
       var currentState = state as HomeLoadedState;
       yield HomeLoadedState(currentState.oldQuoteContent, currentState.quote,
           currentState.favouriteQuotes, 0);

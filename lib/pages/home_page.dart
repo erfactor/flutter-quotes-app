@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage>
   final _searchTextController = TextEditingController();
   bool _showFab = true;
   PersistentBottomSheetController _bottomSheetController;
+  PageController _pageController = PageController();
 
   @override
   void initState() {
@@ -36,7 +37,9 @@ class _HomePageState extends State<HomePage>
         cubit: _bloc,
         builder: (context, state) {
           if (state is HomeLoadingState) {
-            return Container(color: Colors.grey,);
+            return Container(
+              color: Colors.grey,
+            );
           } else if (state is HomeLoadedState) {
             return _buildLayout(state);
           } else {
@@ -57,18 +60,29 @@ class _HomePageState extends State<HomePage>
       animation: _controller,
       builder: (context, _) {
         return Scaffold(
-          key: _scaffoldKey,
-          floatingActionButton: _showFab && state.bottomBarIndex == 0
-              ? _addQuoteFab(context)
-              : Container(),
-          bottomNavigationBar: _bottomNavigationBar(context, state),
-          appBar: AppBar(
-            title: Text("Netguru Core Values"),
-          ),
-          body: state.bottomBarIndex == 0
-              ? _quoteView(state, context, textColor)
-              : _favoritesView(state, context),
-        );
+            key: _scaffoldKey,
+            floatingActionButton: _showFab && state.bottomBarIndex == 0
+                ? _addQuoteFab(context)
+                : Container(),
+            bottomNavigationBar: _bottomNavigationBar(context, state),
+            appBar: AppBar(
+              title: Text("Netguru Core Values"),
+            ),
+            body: PageView(
+              children: [
+                _quoteView(state, context, textColor),
+                _favoritesView(state, context),
+              ],
+              controller: _pageController,
+              onPageChanged: (index){
+                if (index == 0) {
+                  _bloc.add(LoadQuoteEvent());
+                } else {
+                  _bloc.add(LoadFavoritesEvent());
+                  _bottomSheetController?.close();
+                }
+              },
+            ));
       },
     );
   }
@@ -84,12 +98,7 @@ class _HomePageState extends State<HomePage>
         BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
       ],
       onTap: (index) {
-        if (index == 0) {
-          _bloc.add(LoadQuotesEvent());
-        } else {
-          _bloc.add(LoadFavoritesEvent());
-          _bottomSheetController?.close();
-        }
+        _pageController.animateToPage(index, duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       },
     );
   }
@@ -119,7 +128,7 @@ class _HomePageState extends State<HomePage>
   Widget _favoritesView(HomeLoadedState state, BuildContext context) {
     var quotes = state.favouriteQuotes;
     return ListView.builder(
-        itemCount: quotes.length,
+        itemCount: quotes == null ? 0 : quotes.length,
         itemBuilder: (BuildContext context, int index) {
           var quote = quotes[index];
           return Padding(
@@ -197,9 +206,11 @@ class _HomePageState extends State<HomePage>
         state.quote.isFavorite ? Icons.favorite : Icons.favorite_border,
       ),
       onPressed: () {
-        _showSnack(context, state.quote.isFavorite
-            ? "Quote deleted from favorites!"
-            : "Quote added to favorites!");
+        _showSnack(
+            context,
+            state.quote.isFavorite
+                ? "Quote deleted from favorites!"
+                : "Quote added to favorites!");
         _bloc.add(FavoriteEvent());
       },
     );
