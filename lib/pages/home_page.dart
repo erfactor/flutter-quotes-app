@@ -163,6 +163,7 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _addQuoteBottomSheet(BuildContext context) {
+    var focusNode = FocusNode();
     return Container(
       color: Theme.of(context).backgroundColor,
       height: 100,
@@ -172,12 +173,14 @@ class _HomePageState extends State<HomePage>
           children: <Widget>[
             TextField(
               controller: _searchTextController,
+              focusNode: focusNode,
             ),
             ElevatedButton(
               child: const Text('Add new quote'),
               onPressed: () {
                 _bloc.add(NewQuoteEvent(_searchTextController.value.text));
                 Navigator.pop(context);
+                focusNode.unfocus();
                 _showSnack(context, "New quote added!");
               },
             )
