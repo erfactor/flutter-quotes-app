@@ -48,7 +48,7 @@ class QuoteService {
     }
   }
 
-  Future<List<Quote>> getFavouriteQuotes() async {
+  Future<List<Quote>> getFavoriteQuotes() async {
     var quotes = await _loadQuotes();
     return quotes.where((element) => element.isFavorite).toList();
   }

@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage>
   bool _showFab = true;
   PersistentBottomSheetController _bottomSheetController;
   PageController _pageController = PageController();
+  int _bottomBarIndex = 0;
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class _HomePageState extends State<HomePage>
       builder: (context, _) {
         return Scaffold(
             key: _scaffoldKey,
-            floatingActionButton: _showFab && state.bottomBarIndex == 0
+            floatingActionButton: _showFab && _bottomBarIndex == 0
                 ? _addQuoteFab(context)
                 : Container(),
             bottomNavigationBar: _bottomNavigationBar(context, state),
@@ -74,11 +75,11 @@ class _HomePageState extends State<HomePage>
                 _favoritesView(state, context),
               ],
               controller: _pageController,
-              onPageChanged: (index){
-                if (index == 0) {
-                  _bloc.add(LoadQuoteEvent());
-                } else {
-                  _bloc.add(LoadFavoritesEvent());
+              onPageChanged: (index) {
+                setState(() {
+                  _bottomBarIndex = index;
+                });
+                if (index == 1) {
                   _bottomSheetController?.close();
                 }
               },
@@ -91,14 +92,15 @@ class _HomePageState extends State<HomePage>
       BuildContext context, HomeLoadedState state) {
     return BottomNavigationBar(
       backgroundColor: Theme.of(context).bottomAppBarColor,
-      currentIndex: state.bottomBarIndex,
+      currentIndex: _bottomBarIndex,
       items: [
         BottomNavigationBarItem(
             icon: Icon(Icons.format_quote_rounded), label: "Values"),
         BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
       ],
       onTap: (index) {
-        _pageController.animateToPage(index, duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
+        _pageController.animateToPage(index,
+            duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       },
     );
   }
@@ -126,9 +128,9 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _favoritesView(HomeLoadedState state, BuildContext context) {
-    var quotes = state.favouriteQuotes;
+    var quotes = state.favoriteQuotes;
     return ListView.builder(
-        itemCount: quotes == null ? 0 : quotes.length,
+        itemCount: quotes.length,
         itemBuilder: (BuildContext context, int index) {
           var quote = quotes[index];
           return Padding(
