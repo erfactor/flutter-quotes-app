@@ -14,13 +14,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   HomeBloc _bloc;
-  AnimationController _controller;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _searchTextController = TextEditingController();
-  bool _showFab = true;
   PersistentBottomSheetController _bottomSheetController;
   PageController _pageController = PageController();
+  AnimationController _controller;
   int _bottomBarIndex = 0;
+  bool _showFab = true;
 
   @override
   void initState() {
