@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:netguru/models/quote.dart';
 import 'package:netguru/services/quote_service.dart';
 
-abstract class HomeEvent {}
+abstract class HomeEvent {
+  Stream<HomeState> mapEventToState(HomeBloc bloc) async* {}
+}
 
 abstract class HomeState {}
 
@@ -19,26 +21,75 @@ class HomeLoadedState extends HomeState {
       {this.animateText = false});
 }
 
-class LoadHomeEvent extends HomeEvent {}
-
-class QuoteLoadedEvent extends HomeEvent {
-  final Quote quote;
-
-  QuoteLoadedEvent(this.quote);
+class LoadHomeEvent implements HomeEvent {
+  @override
+  Stream<HomeState> mapEventToState(HomeBloc bloc) async* {
+    yield HomeLoadingState();
+    bloc._quoteService.getQuotes().listen((quote) {
+      bloc.add(QuoteLoadedEvent(quote));
+    });
+  }
 }
 
-class DeleteFavoriteEvent extends HomeEvent {
+class QuoteLoadedEvent implements HomeEvent {
+  final Quote quote;
+  QuoteLoadedEvent(this.quote);
+
+  @override
+  Stream<HomeState> mapEventToState(HomeBloc bloc) async* {
+    var oldQuoteContent = "";
+    if (bloc.state is HomeLoadedState) {
+      var currentState = bloc.state as HomeLoadedState;
+      oldQuoteContent = currentState.quote.content;
+    }
+    var favoriteQuotes = await bloc._quoteService.getFavoriteQuotes();
+    yield HomeLoadedState(oldQuoteContent, quote, favoriteQuotes,
+        animateText: true);
+  }
+}
+
+class DeleteFavoriteEvent implements HomeEvent {
   final int id;
 
   DeleteFavoriteEvent(this.id);
+
+  @override
+  Stream<HomeState> mapEventToState(HomeBloc bloc) async* {
+    var currentState = bloc.state as HomeLoadedState;
+    if (currentState.quote.id == id) {
+      currentState.quote.isFavorite = false;
+    }
+    await bloc._quoteService.setQuoteAsFavorite(id, false);
+    var favoriteQuotes = await bloc._quoteService.getFavoriteQuotes();
+    yield HomeLoadedState(
+        currentState.oldQuoteContent, currentState.quote, favoriteQuotes);
+
+  }
 }
 
-class FavoriteEvent extends HomeEvent {}
+class FavoriteEvent implements HomeEvent {
+  @override
+  Stream<HomeState> mapEventToState(HomeBloc bloc) async* {
+    var currentState = bloc.state as HomeLoadedState;
+    var quote = Quote(currentState.quote.id, currentState.quote.content,
+        isFavorite: !currentState.quote.isFavorite);
+    await bloc._quoteService.setQuoteAsFavorite(quote.id, quote.isFavorite);
+    var favoriteQuotes = await bloc._quoteService.getFavoriteQuotes();
+    yield HomeLoadedState(
+        currentState.oldQuoteContent, quote, favoriteQuotes);
 
-class NewQuoteEvent extends HomeEvent {
+  }
+}
+
+class NewQuoteEvent implements HomeEvent {
   final String quoteContent;
 
   NewQuoteEvent(this.quoteContent);
+
+  @override
+  Stream<HomeState> mapEventToState(HomeBloc bloc) async* {
+    await bloc._quoteService.addNewQuote(quoteContent);
+  }
 }
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
@@ -50,39 +101,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   @override
   Stream<HomeState> mapEventToState(HomeEvent event) async* {
-    if (event is LoadHomeEvent) {
-      yield HomeLoadingState();
-      _quoteService.getQuotes().listen((quote) {
-        add(QuoteLoadedEvent(quote));
-      });
-    } else if (event is QuoteLoadedEvent) {
-      var oldQuoteContent = "";
-      if (state is HomeLoadedState) {
-        var currentState = state as HomeLoadedState;
-        oldQuoteContent = currentState.quote.content;
-      }
-      var favoriteQuotes = await _quoteService.getFavoriteQuotes();
-      yield HomeLoadedState(oldQuoteContent, event.quote, favoriteQuotes,
-          animateText: true);
-    } else if (event is NewQuoteEvent) {
-      await _quoteService.addNewQuote(event.quoteContent);
-    } else if (event is FavoriteEvent) {
-      var currentState = state as HomeLoadedState;
-      var quote = Quote(currentState.quote.id, currentState.quote.content,
-          isFavorite: !currentState.quote.isFavorite);
-      await _quoteService.setQuoteAsFavorite(quote.id, quote.isFavorite);
-      var favoriteQuotes = await _quoteService.getFavoriteQuotes();
-      yield HomeLoadedState(
-          currentState.oldQuoteContent, quote, favoriteQuotes);
-    } else if (event is DeleteFavoriteEvent) {
-      var currentState = state as HomeLoadedState;
-      if (currentState.quote.id == event.id) {
-        currentState.quote.isFavorite = false;
-      }
-      await _quoteService.setQuoteAsFavorite(event.id, false);
-      var favoriteQuotes = await _quoteService.getFavoriteQuotes();
-      yield HomeLoadedState(
-          currentState.oldQuoteContent, currentState.quote, favoriteQuotes);
-    }
+    yield* event.mapEventToState(this);
   }
 }
