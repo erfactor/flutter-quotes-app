@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:netguru/models/quote.dart';
-import 'package:netguru/services/quote_service.dart';
+import 'package:quotes/features/quotes/domain/entities/quote.dart';
+import 'package:quotes/features/quotes/data/repository/quotes_repository.dart';
 
 abstract class HomeEvent {
   Stream<HomeState> mapEventToState(HomeBloc bloc) async* {}
@@ -12,13 +12,12 @@ abstract class HomeState {}
 class HomeLoadingState extends HomeState {}
 
 class HomeLoadedState extends HomeState {
-  final String oldQuoteContent;
+  final String? oldQuoteContent;
   final Quote quote;
   final List<Quote> favoriteQuotes;
   bool animateText;
 
-  HomeLoadedState(this.oldQuoteContent, this.quote, this.favoriteQuotes,
-      {this.animateText = false});
+  HomeLoadedState(this.oldQuoteContent, this.quote, this.favoriteQuotes, {this.animateText = false});
 }
 
 class LoadHomeEvent implements HomeEvent {
@@ -37,14 +36,13 @@ class QuoteLoadedEvent implements HomeEvent {
 
   @override
   Stream<HomeState> mapEventToState(HomeBloc bloc) async* {
-    var oldQuoteContent = "";
+    String? oldQuoteContent = "";
     if (bloc.state is HomeLoadedState) {
       var currentState = bloc.state as HomeLoadedState;
       oldQuoteContent = currentState.quote.content;
     }
     var favoriteQuotes = await bloc._quoteService.getFavoriteQuotes();
-    yield HomeLoadedState(oldQuoteContent, quote, favoriteQuotes,
-        animateText: true);
+    yield HomeLoadedState(oldQuoteContent, quote, favoriteQuotes, animateText: true);
   }
 }
 
@@ -61,9 +59,7 @@ class DeleteFavoriteEvent implements HomeEvent {
     }
     await bloc._quoteService.setQuoteAsFavorite(id, false);
     var favoriteQuotes = await bloc._quoteService.getFavoriteQuotes();
-    yield HomeLoadedState(
-        currentState.oldQuoteContent, currentState.quote, favoriteQuotes);
-
+    yield HomeLoadedState(currentState.oldQuoteContent, currentState.quote, favoriteQuotes);
   }
 }
 
@@ -71,13 +67,10 @@ class FavoriteEvent implements HomeEvent {
   @override
   Stream<HomeState> mapEventToState(HomeBloc bloc) async* {
     var currentState = bloc.state as HomeLoadedState;
-    var quote = Quote(currentState.quote.id, currentState.quote.content,
-        isFavorite: !currentState.quote.isFavorite);
+    var quote = Quote(currentState.quote.id, currentState.quote.content, isFavorite: !currentState.quote.isFavorite);
     await bloc._quoteService.setQuoteAsFavorite(quote.id, quote.isFavorite);
     var favoriteQuotes = await bloc._quoteService.getFavoriteQuotes();
-    yield HomeLoadedState(
-        currentState.oldQuoteContent, quote, favoriteQuotes);
-
+    yield HomeLoadedState(currentState.oldQuoteContent, quote, favoriteQuotes);
   }
 }
 
@@ -93,10 +86,10 @@ class NewQuoteEvent implements HomeEvent {
 }
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  QuoteService _quoteService;
+  late QuotesRepository _quoteService;
 
   HomeBloc() : super(HomeLoadingState()) {
-    _quoteService = QuoteService.get();
+    _quoteService = QuotesRepository.get();
   }
 
   @override

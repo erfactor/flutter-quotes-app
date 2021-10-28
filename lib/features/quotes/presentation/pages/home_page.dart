@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:netguru/blocs/home_bloc.dart';
-import 'package:netguru/exceptions/UnknownStateException.dart';
+import 'package:quotes/features/quotes/presentation/bloc/home_bloc.dart';
+import 'package:quotes/core/exceptions/UnknownStateException.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key}) : super(key: key);
+  HomePage({Key? key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
-  HomeBloc _bloc;
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+  HomeBloc? _bloc;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _searchTextController = TextEditingController();
-  PersistentBottomSheetController _bottomSheetController;
+  PersistentBottomSheetController? _bottomSheetController;
   PageController _pageController = PageController();
-  AnimationController _controller;
+  late AnimationController _controller;
   int _bottomBarIndex = 0;
   bool _showFab = true;
 
@@ -26,17 +25,16 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _bloc = HomeBloc();
-    _bloc.add(LoadHomeEvent());
+    _bloc!.add(LoadHomeEvent());
 
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _controller = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder(
-        cubit: _bloc,
-        builder: (context, state) {
+        bloc: _bloc,
+        builder: (context, dynamic state) {
           if (state is HomeLoadingState) {
             return Container(
               color: Colors.grey,
@@ -55,16 +53,14 @@ class _HomePageState extends State<HomePage>
       _controller.forward();
       state.animateText = false;
     }
-    var textColor = Theme.of(context).textTheme.headline4.color;
+    var textColor = Theme.of(context).textTheme.headline4!.color;
 
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
         return Scaffold(
             key: _scaffoldKey,
-            floatingActionButton: _showFab && _bottomBarIndex == 0
-                ? _addQuoteFab(context)
-                : Container(),
+            floatingActionButton: _showFab && _bottomBarIndex == 0 ? _addQuoteFab(context) : Container(),
             bottomNavigationBar: _bottomNavigationBar(context, state),
             appBar: AppBar(
               title: Text("Netguru Core Values"),
@@ -88,25 +84,21 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  BottomNavigationBar _bottomNavigationBar(
-      BuildContext context, HomeLoadedState state) {
+  BottomNavigationBar _bottomNavigationBar(BuildContext context, HomeLoadedState state) {
     return BottomNavigationBar(
       backgroundColor: Theme.of(context).bottomAppBarColor,
       currentIndex: _bottomBarIndex,
       items: [
-        BottomNavigationBarItem(
-            icon: Icon(Icons.format_quote_rounded), label: "Values"),
+        BottomNavigationBarItem(icon: Icon(Icons.format_quote_rounded), label: "Values"),
         BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
       ],
       onTap: (index) {
-        _pageController.animateToPage(index,
-            duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
+        _pageController.animateToPage(index, duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       },
     );
   }
 
-  Widget _quoteView(
-      HomeLoadedState state, BuildContext context, Color textColor) {
+  Widget _quoteView(HomeLoadedState state, BuildContext context, Color? textColor) {
     var gapHeight = MediaQuery.of(context).size.height * 0.05;
     return Center(
       child: Column(
@@ -119,9 +111,7 @@ class _HomePageState extends State<HomePage>
           Container(
             height: gapHeight,
           ),
-          FractionallySizedBox(
-              widthFactor: 0.8,
-              child: _textAnimation(context, state, textColor)),
+          FractionallySizedBox(widthFactor: 0.8, child: _textAnimation(context, state, textColor)),
         ],
       ),
     );
@@ -144,8 +134,8 @@ class _HomePageState extends State<HomePage>
               trailing: IconButton(
                 icon: Icon(Icons.favorite_outlined),
                 onPressed: () {
-                  _bloc.add(DeleteFavoriteEvent(quote.id));
-                  _showSnack(context, "Quote deleted from favorites!");
+                  _bloc!.add(DeleteFavoriteEvent(quote.id));
+                  showSnackBar(context, "Quote deleted from favorites!");
                 },
               ),
             ),
@@ -164,10 +154,8 @@ class _HomePageState extends State<HomePage>
       onPressed: () {
         _searchTextController.clear();
         showFloatingActionButton(false);
-        _bottomSheetController = _scaffoldKey.currentState
-            .showBottomSheet((context) => _addQuoteBottomSheet(context));
-        _bottomSheetController.closed.then((value) =>
-            {_bottomSheetController = null, showFloatingActionButton(true)});
+        _bottomSheetController = _scaffoldKey.currentState!.showBottomSheet((context) => _addQuoteBottomSheet(context));
+        _bottomSheetController!.closed.then((value) => {_bottomSheetController = null, showFloatingActionButton(true)});
       },
       child: Icon(Icons.add),
     );
@@ -189,10 +177,10 @@ class _HomePageState extends State<HomePage>
             ElevatedButton(
               child: const Text('Add new quote'),
               onPressed: () {
-                _bloc.add(NewQuoteEvent(_searchTextController.value.text));
+                _bloc!.add(NewQuoteEvent(_searchTextController.value.text));
                 Navigator.pop(context);
                 focusNode.unfocus();
-                _showSnack(context, "New quote added!");
+                showSnackBar(context, "New quote added!");
               },
             )
           ],
@@ -208,60 +196,41 @@ class _HomePageState extends State<HomePage>
         state.quote.isFavorite ? Icons.favorite : Icons.favorite_border,
       ),
       onPressed: () {
-        _showSnack(
-            context,
-            state.quote.isFavorite
-                ? "Quote deleted from favorites!"
-                : "Quote added to favorites!");
-        _bloc.add(FavoriteEvent());
+        showSnackBar(context, state.quote.isFavorite ? "Quote deleted from favorites!" : "Quote added to favorites!");
+        _bloc!.add(FavoriteEvent());
       },
     );
   }
 
-  Stack _textAnimation(
-      BuildContext context, HomeLoadedState state, Color textColor) {
+  Stack _textAnimation(BuildContext context, HomeLoadedState state, Color? textColor) {
     return Stack(
       children: [
-        _fadingText(
-            context,
-            state.oldQuoteContent,
-            [0, _controller.value, _controller.value],
-            [Colors.transparent, Colors.transparent, textColor]),
-        _fadingText(
-            context,
-            state.quote.content,
-            [0, _controller.value, _controller.value, 1],
-            [textColor, textColor, Colors.transparent, Colors.transparent]),
+        _fadingText(context, state.oldQuoteContent!, [0, _controller.value, _controller.value], [Colors.transparent, Colors.transparent, textColor]),
+        _fadingText(context, state.quote.content, [0, _controller.value, _controller.value, 1], [textColor, textColor, Colors.transparent, Colors.transparent]),
       ],
     );
   }
 
-  Widget _fadingText(BuildContext context, String text, List<double> stops,
-      List<Color> colors) {
+  Widget _fadingText(BuildContext context, String text, List<double> stops, List<Color?> colors) {
     return ShaderMask(
       blendMode: BlendMode.srcIn,
       shaderCallback: (Rect rect) {
         return LinearGradient(
           stops: stops,
-          colors: colors,
+          colors: colors as List<Color>,
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ).createShader(rect);
       },
       child: Container(
         width: double.infinity,
-        child: Text(text,
-            textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .headline4
-                .copyWith(fontFamily: 'Gotham')),
+        child: Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline4!.copyWith(fontFamily: 'Gotham')),
       ),
     );
   }
 
-  void _showSnack(BuildContext context, String text) {
-    _scaffoldKey.currentState.showSnackBar(SnackBar(
+  void showSnackBar(BuildContext context, String text) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(text),
       duration: Duration(milliseconds: 800),
     ));

@@ -2,9 +2,8 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'quote.g.dart';
 
-//This uses json generator from https://pub.dev/packages/json_serializable
 @JsonSerializable()
-class Quote{
+class Quote {
   final int id;
   final String content;
   bool isFavorite;
