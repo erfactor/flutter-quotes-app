@@ -41,7 +41,7 @@ class _CreateQuoteBottomSheetState extends State<CreateQuoteBottomSheet> {
             ElevatedButton(
               child: const Text('Add new quote'),
               onPressed: () {
-                context.read<HomeBloc>().add(NewQuoteEvent(textController.value.text));
+                context.read<QuoteBloc>().add(NewQuoteEvent(textController.value.text));
                 Navigator.pop(context);
                 focusNode.unfocus();
                 showSnackBar("New quote added!");

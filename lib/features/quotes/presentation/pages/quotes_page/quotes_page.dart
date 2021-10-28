@@ -1,66 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quotes/core/service_locator/sl.dart';
 import 'package:quotes/core/utilities/show_snack_bar.dart';
 import 'package:quotes/features/quotes/presentation/bloc/home_bloc.dart';
 import 'package:quotes/core/exceptions/UnknownStateException.dart';
 import 'package:quotes/features/quotes/presentation/pages/quotes_page/create_quote_bottom_sheet.dart';
 
-class HomePage extends StatefulWidget {
-  HomePage({Key? key}) : super(key: key);
-
+class QuotesPage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _QuotesPageState createState() => _QuotesPageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  HomeBloc? _bloc;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  PersistentBottomSheetController? _bottomSheetController;
-  PageController _pageController = PageController();
-  late AnimationController _controller;
+class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateMixin {
+  QuoteBloc? _bloc;
+  late PageController pageController;
+  late AnimationController animationController;
   int _bottomBarIndex = 0;
   bool _showFab = true;
 
   @override
   void initState() {
     super.initState();
-    _bloc = HomeBloc();
-    _bloc!.add(LoadHomeEvent());
-
-    _controller = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    pageController = PageController();
+    animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder(
+    return BlocProvider(
+      create: (_) => QuoteBloc(sl()),
+      child: BlocBuilder(
         bloc: _bloc,
         builder: (context, dynamic state) {
           if (state is HomeLoadingState) {
-            return Container(
-              color: Colors.grey,
-            );
+            return Container(color: Colors.grey);
           } else if (state is HomeLoadedState) {
             return _buildLayout(state);
           } else {
             throw (UnknownStateException("Unknown state from home bloc."));
           }
-        });
+        },
+      ),
+    );
   }
 
   Widget _buildLayout(HomeLoadedState state) {
     if (state.animateText) {
-      _controller.reset();
-      _controller.forward();
+      animationController.reset();
+      animationController.forward();
       state.animateText = false;
     }
     var textColor = Theme.of(context).textTheme.headline4!.color;
 
     return AnimatedBuilder(
-      animation: _controller,
+      animation: animationController,
       builder: (context, _) {
         return Scaffold(
-          key: _scaffoldKey,
           floatingActionButton: _showFab && _bottomBarIndex == 0 ? _addQuoteFab(context) : Container(),
           bottomNavigationBar: _bottomNavigationBar(context, state),
           appBar: AppBar(title: Text("Your Quotes")),
@@ -69,14 +65,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               _quoteView(state, context, textColor),
               _favoritesView(state, context),
             ],
-            controller: _pageController,
+            controller: pageController,
             onPageChanged: (index) {
-              setState(() {
-                _bottomBarIndex = index;
-              });
-              if (index == 1) {
-                _bottomSheetController?.close();
-              }
+              setState(() => _bottomBarIndex = index);
             },
           ),
         );
@@ -93,7 +84,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
       ],
       onTap: (index) {
-        _pageController.animateToPage(index, duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
+        pageController.animateToPage(index, duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       },
     );
   }
@@ -173,8 +164,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   Stack _textAnimation(BuildContext context, HomeLoadedState state, Color? textColor) {
     return Stack(
       children: [
-        _fadingText(context, state.oldQuoteContent!, [0, _controller.value, _controller.value], [Colors.transparent, Colors.transparent, textColor]),
-        _fadingText(context, state.quote.content, [0, _controller.value, _controller.value, 1], [textColor, textColor, Colors.transparent, Colors.transparent]),
+        _fadingText(
+            context, state.oldQuoteContent!, [0, animationController.value, animationController.value], [Colors.transparent, Colors.transparent, textColor]),
+        _fadingText(context, state.quote.content, [0, animationController.value, animationController.value, 1],
+            [textColor, textColor, Colors.transparent, Colors.transparent]),
       ],
     );
   }

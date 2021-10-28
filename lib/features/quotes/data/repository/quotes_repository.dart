@@ -7,9 +7,8 @@ import 'package:quotes/core/service_locator/sl.dart';
 import 'package:quotes/features/quotes/domain/entities/quote.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class QuotesRepository {
+class QuoteRepository {
   late final sharedPreferences = sl<SharedPreferences>();
-  static final QuotesRepository _instance = QuotesRepository._internal();
   Random _random = new Random();
   final Duration _waitDuration = Duration(seconds: 5);
   final String _quoteListKey = "UniqueQuoteListKey";
@@ -24,13 +23,7 @@ class QuotesRepository {
     Quote(7, "Recognize excellence and engagement"),
   ];
 
-  QuotesRepository._internal();
-
-  factory QuotesRepository.get() {
-    return _instance;
-  }
-
-  Stream<Quote> getQuotes() async* {
+  Stream<Quote> readQuotes() async* {
     var quotes = await _loadQuotes();
     if (quotes == null) {
       _saveQuotes(_initialQuotes);
