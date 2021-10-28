@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:quotes/core/sl.dart';
+import 'package:quotes/core/service_locator/sl.dart';
 import 'package:quotes/features/quotes/domain/entities/quote.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

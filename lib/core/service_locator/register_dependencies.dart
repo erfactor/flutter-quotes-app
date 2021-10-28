@@ -1,4 +1,4 @@
-import 'package:quotes/core/sl.dart';
+import 'package:quotes/core/service_locator/sl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void registerDependencies() {

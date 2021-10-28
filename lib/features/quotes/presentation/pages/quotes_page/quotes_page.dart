@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:quotes/core/utilities/show_snack_bar.dart';
 import 'package:quotes/features/quotes/presentation/bloc/home_bloc.dart';
 import 'package:quotes/core/exceptions/UnknownStateException.dart';
+import 'package:quotes/features/quotes/presentation/pages/quotes_page/create_quote_bottom_sheet.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -14,7 +16,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   HomeBloc? _bloc;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _searchTextController = TextEditingController();
   PersistentBottomSheetController? _bottomSheetController;
   PageController _pageController = PageController();
   late AnimationController _controller;
@@ -59,27 +60,26 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       animation: _controller,
       builder: (context, _) {
         return Scaffold(
-            key: _scaffoldKey,
-            floatingActionButton: _showFab && _bottomBarIndex == 0 ? _addQuoteFab(context) : Container(),
-            bottomNavigationBar: _bottomNavigationBar(context, state),
-            appBar: AppBar(
-              title: Text("Netguru Core Values"),
-            ),
-            body: PageView(
-              children: [
-                _quoteView(state, context, textColor),
-                _favoritesView(state, context),
-              ],
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _bottomBarIndex = index;
-                });
-                if (index == 1) {
-                  _bottomSheetController?.close();
-                }
-              },
-            ));
+          key: _scaffoldKey,
+          floatingActionButton: _showFab && _bottomBarIndex == 0 ? _addQuoteFab(context) : Container(),
+          bottomNavigationBar: _bottomNavigationBar(context, state),
+          appBar: AppBar(title: Text("Your Quotes")),
+          body: PageView(
+            children: [
+              _quoteView(state, context, textColor),
+              _favoritesView(state, context),
+            ],
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _bottomBarIndex = index;
+              });
+              if (index == 1) {
+                _bottomSheetController?.close();
+              }
+            },
+          ),
+        );
       },
     );
   }
@@ -135,7 +135,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 icon: Icon(Icons.favorite_outlined),
                 onPressed: () {
                   _bloc!.add(DeleteFavoriteEvent(quote.id));
-                  showSnackBar(context, "Quote deleted from favorites!");
+                  showSnackBar("Quote deleted from favorites!");
                 },
               ),
             ),
@@ -152,51 +152,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   _addQuoteFab(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
-        _searchTextController.clear();
         showFloatingActionButton(false);
-        _bottomSheetController = _scaffoldKey.currentState!.showBottomSheet((context) => _addQuoteBottomSheet(context));
-        _bottomSheetController!.closed.then((value) => {_bottomSheetController = null, showFloatingActionButton(true)});
+        Scaffold.of(context).showBottomSheet((context) => CreateQuoteBottomSheet()).closed.then((_) => {showFloatingActionButton(true)});
       },
       child: Icon(Icons.add),
-    );
-  }
-
-  Widget _addQuoteBottomSheet(BuildContext context) {
-    var focusNode = FocusNode();
-    return Container(
-      color: Theme.of(context).backgroundColor,
-      height: 100,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            TextField(
-              controller: _searchTextController,
-              focusNode: focusNode,
-            ),
-            ElevatedButton(
-              child: const Text('Add new quote'),
-              onPressed: () {
-                _bloc!.add(NewQuoteEvent(_searchTextController.value.text));
-                Navigator.pop(context);
-                focusNode.unfocus();
-                showSnackBar(context, "New quote added!");
-              },
-            )
-          ],
-        ),
-      ),
     );
   }
 
   Widget _favoriteButton(HomeLoadedState state, BuildContext context) {
     return IconButton(
       iconSize: 60,
-      icon: Icon(
-        state.quote.isFavorite ? Icons.favorite : Icons.favorite_border,
-      ),
+      icon: Icon(state.quote.isFavorite ? Icons.favorite : Icons.favorite_border),
       onPressed: () {
-        showSnackBar(context, state.quote.isFavorite ? "Quote deleted from favorites!" : "Quote added to favorites!");
+        showSnackBar(state.quote.isFavorite ? "Quote deleted from favorites!" : "Quote added to favorites!");
         _bloc!.add(FavoriteEvent());
       },
     );
@@ -227,12 +195,5 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         child: Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline4!.copyWith(fontFamily: 'Gotham')),
       ),
     );
-  }
-
-  void showSnackBar(BuildContext context, String text) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(text),
-      duration: Duration(milliseconds: 800),
-    ));
   }
 }
