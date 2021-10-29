@@ -7,23 +7,33 @@ import 'package:quotes/features/quotes/presentation/bloc/home_bloc.dart';
 import 'package:quotes/core/exceptions/unknown_state_exception.dart';
 import 'package:quotes/features/quotes/presentation/pages/quotes_page/create_quote_bottom_sheet.dart';
 
+part '_bottom_navigation_bar.dart';
+
 class QuotesPage extends StatefulWidget {
   @override
   _QuotesPageState createState() => _QuotesPageState();
 }
 
 class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateMixin {
-  QuoteBloc? _bloc;
   late PageController pageController;
   late AnimationController animationController;
-  int _bottomBarIndex = 0;
+  late ValueNotifier<int> pageNotifier;
   bool _showFab = true;
 
   @override
   void initState() {
     super.initState();
     pageController = PageController();
+    pageNotifier = ValueNotifier(0);
     animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+  }
+
+  @override
+  void dispose() {
+    pageController.dispose();
+    pageNotifier.dispose();
+    animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -31,7 +41,7 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
     return BlocProvider(
       create: (_) => QuoteBloc(sl()),
       child: BlocBuilder(
-        bloc: _bloc,
+        bloc: context.read<QuoteBloc>(),
         builder: (context, dynamic state) {
           if (state is HomeLoadingState) {
             return Container(color: Colors.grey);
@@ -57,8 +67,8 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
       animation: animationController,
       builder: (context, _) {
         return Scaffold(
-          floatingActionButton: _showFab && _bottomBarIndex == 0 ? _addQuoteFab(context) : Container(),
-          bottomNavigationBar: _bottomNavigationBar(context, state),
+          floatingActionButton: _showFab ? _addQuoteFab(context) : Container(),
+          bottomNavigationBar: _BottomNavigationBar(pageController: pageController, pageNotifier: pageNotifier),
           appBar: AppBar(title: const Text("Your Quotes")),
           body: PageView(
             children: [
@@ -66,25 +76,9 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
               _favoritesView(state, context),
             ],
             controller: pageController,
-            onPageChanged: (index) {
-              setState(() => _bottomBarIndex = index);
-            },
+            onPageChanged: (index) => pageNotifier.value = index,
           ),
         );
-      },
-    );
-  }
-
-  BottomNavigationBar _bottomNavigationBar(BuildContext context, HomeLoadedState state) {
-    return BottomNavigationBar(
-      backgroundColor: Theme.of(context).bottomAppBarColor,
-      currentIndex: _bottomBarIndex,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.format_quote_rounded), label: "Values"),
-        BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
-      ],
-      onTap: (index) {
-        pageController.animateToPage(index, duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       },
     );
   }
@@ -125,7 +119,7 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
               trailing: IconButton(
                 icon: const Icon(Icons.favorite_outlined),
                 onPressed: () {
-                  _bloc!.add(DeleteFavoriteEvent(quote.id));
+                  context.read<QuoteBloc>().add(DeleteFavoriteEvent(quote.id));
                   showSnackBar("Quote deleted from favorites!");
                 },
               ),
@@ -156,7 +150,7 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
       icon: Icon(state.quote.isFavorite ? Icons.favorite : Icons.favorite_border),
       onPressed: () {
         showSnackBar(state.quote.isFavorite ? "Quote deleted from favorites!" : "Quote added to favorites!");
-        _bloc!.add(FavoriteEvent());
+        context.read<QuoteBloc>().add(FavoriteEvent());
       },
     );
   }
