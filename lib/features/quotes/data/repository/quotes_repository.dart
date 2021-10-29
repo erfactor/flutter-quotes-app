@@ -9,11 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class QuoteRepository {
   late final sharedPreferences = sl<SharedPreferences>();
-  Random _random = new Random();
-  final Duration _waitDuration = Duration(seconds: 5);
+  final Random _random = Random();
+  final Duration _waitDuration = const Duration(seconds: 5);
   final String _quoteListKey = "UniqueQuoteListKey";
 
-  List<Quote> _initialQuotes = [
+  final List<Quote> _initialQuotes = [
     Quote(1, "Exceed clients' and colleagues' expectations"),
     Quote(2, "Take ownership and question the status quo in a constructive manner"),
     Quote(3, "Be brave, curious and experiment. Learn from all successes and failures"),

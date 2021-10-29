@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quotes/core/service_locator/sl.dart';
 import 'package:quotes/core/utilities/show_snack_bar.dart';
 import 'package:quotes/features/quotes/presentation/bloc/home_bloc.dart';
-import 'package:quotes/core/exceptions/UnknownStateException.dart';
+import 'package:quotes/core/exceptions/unknown_state_exception.dart';
 import 'package:quotes/features/quotes/presentation/pages/quotes_page/create_quote_bottom_sheet.dart';
 
 class QuotesPage extends StatefulWidget {
@@ -23,7 +23,7 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     pageController = PageController();
-    animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
   }
 
   @override
@@ -59,7 +59,7 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
         return Scaffold(
           floatingActionButton: _showFab && _bottomBarIndex == 0 ? _addQuoteFab(context) : Container(),
           bottomNavigationBar: _bottomNavigationBar(context, state),
-          appBar: AppBar(title: Text("Your Quotes")),
+          appBar: AppBar(title: const Text("Your Quotes")),
           body: PageView(
             children: [
               _quoteView(state, context, textColor),
@@ -79,12 +79,12 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
     return BottomNavigationBar(
       backgroundColor: Theme.of(context).bottomAppBarColor,
       currentIndex: _bottomBarIndex,
-      items: [
+      items: const [
         BottomNavigationBarItem(icon: Icon(Icons.format_quote_rounded), label: "Values"),
         BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
       ],
       onTap: (index) {
-        pageController.animateToPage(index, duration: Duration(milliseconds: 500), curve: Curves.easeOutCubic);
+        pageController.animateToPage(index, duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       },
     );
   }
@@ -123,7 +123,7 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
                 style: Theme.of(context).textTheme.headline6,
               ),
               trailing: IconButton(
-                icon: Icon(Icons.favorite_outlined),
+                icon: const Icon(Icons.favorite_outlined),
                 onPressed: () {
                   _bloc!.add(DeleteFavoriteEvent(quote.id));
                   showSnackBar("Quote deleted from favorites!");
@@ -144,9 +144,9 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
     return FloatingActionButton(
       onPressed: () {
         showFloatingActionButton(false);
-        Scaffold.of(context).showBottomSheet((context) => CreateQuoteBottomSheet()).closed.then((_) => {showFloatingActionButton(true)});
+        Scaffold.of(context).showBottomSheet((context) => const CreateQuoteBottomSheet()).closed.then((_) => {showFloatingActionButton(true)});
       },
-      child: Icon(Icons.add),
+      child: const Icon(Icons.add),
     );
   }
 
@@ -183,7 +183,7 @@ class _QuotesPageState extends State<QuotesPage> with SingleTickerProviderStateM
           end: Alignment.centerRight,
         ).createShader(rect);
       },
-      child: Container(
+      child: SizedBox(
         width: double.infinity,
         child: Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headline4!.copyWith(fontFamily: 'Gotham')),
       ),
