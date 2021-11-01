@@ -2,38 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quotes/core/service_locator/register_dependencies.dart';
-import 'package:quotes/features/quotes/data/repository/quotes_repository.dart';
-import 'package:quotes/features/quotes/presentation/pages/quotes_page/quotes_page.dart';
 
-import '../core/utilities/show_snack_bar.dart';
+import 'app.dart';
 
-void main() {
-  registerDependencies();
+Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await registerDependencies();
   FlutterError.onError = onFlutterError;
   runZonedGuarded<Future<void>>(
-    () async => runApp(TheApp()),
+    () async => runApp(const App()),
     (error, stackTrace) {
-      debugPrintSynchronously('Caught an exception\n$error\n $stackTrace');
+      if (kReleaseMode) {
+        // sentry, crashlytics
+      } else {
+        debugPrintSynchronously('Caught an exception\n$error\n $stackTrace');
+      }
     },
   );
-}
-
-class TheApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MultiRepositoryProvider(
-      providers: [RepositoryProvider(create: (_) => QuoteRepository())],
-      child: MaterialApp(
-        title: 'Quotes App',
-        theme: ThemeData(primarySwatch: Colors.green),
-        darkTheme: ThemeData.dark(),
-        home: QuotesPage(),
-        scaffoldMessengerKey: scaffoldMessengerKey,
-      ),
-    );
-  }
 }
 
 void onFlutterError(FlutterErrorDetails details) {

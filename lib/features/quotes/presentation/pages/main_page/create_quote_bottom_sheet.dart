@@ -1,7 +1,7 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quotes/core/utilities/show_snack_bar.dart';
-import 'package:quotes/features/quotes/presentation/bloc/home_bloc.dart';
+import 'package:quotes/features/quotes/presentation/bloc/quote_bloc.dart';
 
 class CreateQuoteBottomSheet extends StatefulWidget {
   const CreateQuoteBottomSheet({Key? key}) : super(key: key);
@@ -41,7 +41,7 @@ class _CreateQuoteBottomSheetState extends State<CreateQuoteBottomSheet> {
             ElevatedButton(
               child: const Text('Add new quote'),
               onPressed: () {
-                context.read<QuoteBloc>().add(NewQuoteEvent(textController.value.text));
+                context.read<QuoteBloc>().create(textController.value.text);
                 Navigator.pop(context);
                 focusNode.unfocus();
                 showSnackBar("New quote added!");

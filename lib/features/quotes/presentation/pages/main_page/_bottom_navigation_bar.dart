@@ -1,4 +1,4 @@
-part of 'quotes_page.dart';
+part of 'quotes_main_page.dart';
 
 class _BottomNavigationBar extends StatelessWidget {
   const _BottomNavigationBar({required this.pageNotifier, required this.pageController});
@@ -14,7 +14,7 @@ class _BottomNavigationBar extends StatelessWidget {
           currentIndex: page,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.format_quote_rounded), label: "Values"),
-            BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites")
+            BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Bookmarks")
           ],
           onTap: (index) {
             pageController.animateToPage(index, duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic);

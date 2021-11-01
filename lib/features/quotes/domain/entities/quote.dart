@@ -6,9 +6,9 @@ part 'quote.g.dart';
 class Quote {
   final int id;
   final String content;
-  bool isFavorite;
+  bool isBookmarked;
 
-  Quote(this.id, this.content, {this.isFavorite = false});
+  Quote(this.id, this.content, {this.isBookmarked = false});
 
   factory Quote.fromJson(Map<String, dynamic> json) => _$QuoteFromJson(json);
   Map<String, dynamic> toJson() => _$QuoteToJson(this);
