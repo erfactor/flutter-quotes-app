@@ -1,14 +1,23 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:quotes/core/service_locator/register_dependencies.dart';
 import 'package:quotes/features/quotes/data/repository/quotes_repository.dart';
 import 'package:quotes/features/quotes/presentation/pages/quotes_page/quotes_page.dart';
 
-import 'core/utilities/show_snack_bar.dart';
+import '../core/utilities/show_snack_bar.dart';
 
 void main() {
   registerDependencies();
-  runApp(TheApp());
+  FlutterError.onError = onFlutterError;
+  runZonedGuarded<Future<void>>(
+    () async => runApp(TheApp()),
+    (error, stackTrace) {
+      debugPrintSynchronously('Caught an exception\n$error\n $stackTrace');
+    },
+  );
 }
 
 class TheApp extends StatelessWidget {
@@ -24,5 +33,13 @@ class TheApp extends StatelessWidget {
         scaffoldMessengerKey: scaffoldMessengerKey,
       ),
     );
+  }
+}
+
+void onFlutterError(FlutterErrorDetails details) {
+  if (kReleaseMode) {
+    Zone.current.handleUncaughtError(details.exception, details.stack ?? StackTrace.current);
+  } else {
+    FlutterError.dumpErrorToConsole(details);
   }
 }
