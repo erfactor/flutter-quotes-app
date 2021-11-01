@@ -20,7 +20,6 @@ class QuotesMainPage extends StatefulWidget {
 class _QuotesMainPageState extends State<QuotesMainPage> with SingleTickerProviderStateMixin {
   late PageController pageController;
   late ValueNotifier<int> pageNotifier;
-  bool _showFab = true;
 
   @override
   void initState() {
@@ -36,10 +35,6 @@ class _QuotesMainPageState extends State<QuotesMainPage> with SingleTickerProvid
     super.dispose();
   }
 
-  void showFloatingActionButton(bool value) {
-    setState(() => _showFab = value);
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -49,7 +44,7 @@ class _QuotesMainPageState extends State<QuotesMainPage> with SingleTickerProvid
         BlocProvider(create: (_) => BookmarkedQuotesBloc(context.read<QuoteRepository>())),
       ],
       child: Scaffold(
-        floatingActionButton: Visibility(visible: _showFab, child: buildCreateQuoteFab(context)),
+        floatingActionButton: const _CreateQuoteFab(),
         bottomNavigationBar: _BottomNavigationBar(pageController: pageController, pageNotifier: pageNotifier),
         appBar: AppBar(title: const Text("Your Quotes")),
         body: PageView(
@@ -63,14 +58,33 @@ class _QuotesMainPageState extends State<QuotesMainPage> with SingleTickerProvid
       ),
     );
   }
+}
 
-  buildCreateQuoteFab(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () {
-        showFloatingActionButton(false);
-        Scaffold.of(context).showBottomSheet((context) => const CreateQuoteBottomSheet()).closed.then((_) => {showFloatingActionButton(true)});
-      },
-      child: const Icon(Icons.add),
+class _CreateQuoteFab extends StatefulWidget {
+  const _CreateQuoteFab({Key? key}) : super(key: key);
+
+  @override
+  State<_CreateQuoteFab> createState() => _CreateQuoteFabState();
+}
+
+class _CreateQuoteFabState extends State<_CreateQuoteFab> {
+  bool isVisible = true;
+
+  void changeVisibility(bool value) {
+    setState(() => isVisible = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      visible: isVisible,
+      child: FloatingActionButton(
+        onPressed: () {
+          changeVisibility(false);
+          Scaffold.of(context).showBottomSheet((context) => const CreateQuoteBottomSheet()).closed.then((_) => {changeVisibility(true)});
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

@@ -13,12 +13,10 @@ class BookmarkedQuotesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final quotes = context.watch<BookmarkedQuotesBloc>().state;
     return ListView.builder(
+      padding: const EdgeInsets.all(16),
       itemCount: quotes.length,
       itemBuilder: (BuildContext context, int index) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: buildBookmarkedQuoteView(context, quotes[index]),
-        );
+        return buildBookmarkedQuoteView(context, quotes[index]);
       },
     );
   }
@@ -31,7 +29,7 @@ class BookmarkedQuotesPage extends StatelessWidget {
         trailing: IconButton(
           icon: const Icon(Icons.favorite_outlined),
           onPressed: () {
-            context.read<QuoteBloc>().bookmark(quote.id);
+            context.read<QuoteBloc>().unbookmark(quote.id);
             showSnackBar("Quote deleted from bookmarks!");
           },
         ),

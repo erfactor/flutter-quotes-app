@@ -20,7 +20,7 @@ class BookmarkButton extends StatelessWidget {
           onPressed: () {
             showSnackBar(quote.isBookmarked ? "Quote deleted from bookmarks!" : "Quote added to bookmarks!");
             final quoteBloc = context.read<QuoteBloc>();
-            quote.isBookmarked ? quoteBloc.unbookmark(quote.id) : quoteBloc.unbookmark(quote.id);
+            quote.isBookmarked ? quoteBloc.unbookmark(quote.id) : quoteBloc.bookmark(quote.id);
           },
         );
       },

@@ -45,7 +45,10 @@ class QuoteRepository {
   }
 
   final bookmarkedQuotesStreamController = StreamController<List<Quote>>.broadcast();
-  Stream<List<Quote>> bookmarkedQuotes() => bookmarkedQuotesStreamController.stream;
+  Stream<List<Quote>> bookmarkedQuotes() {
+    refreshBookmarks();
+    return bookmarkedQuotesStreamController.stream;
+  }
 
   Future refreshBookmarks() async {
     final quotes = (await _loadQuotes()).where((quote) => quote.isBookmarked).toList();
@@ -64,6 +67,7 @@ class QuoteRepository {
     final quote = quotes.firstWhere((q) => q.id == quoteId);
     quote.isBookmarked = isBookmarked;
     await _saveQuotes(quotes);
+    refreshBookmarks();
   }
 
   Future<List<Quote>> _loadQuotes() async {
